@@ -1,0 +1,29 @@
+# dependencias
+/node_modules
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# base de datos local (SQLite)
+/data/*.db
+/data/*.db-journal
+
+# variables de entorno con secretos reales
+.env
+.env.local
+.env*.local
+
+# datos/sesión de Evolution API si se corre local sin Docker
+/evolution_instances
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# sistema operativo / editor
+.DS_Store
+.vscode/
+*.log
