@@ -9,6 +9,8 @@ next-env.d.ts
 # base de datos local (SQLite)
 /data/*.db
 /data/*.db-journal
+/data/*.db-shm
+/data/*.db-wal
 
 # variables de entorno con secretos reales
 .env

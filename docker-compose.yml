@@ -1,0 +1,64 @@
+# Levanta Evolution API (y sus dependencias: Postgres + Redis) en Docker.
+# El backend de Next.js (frontend + API) NO corre acá adentro; se corre
+# aparte con "npm run dev" y se le expone a Evolution API vía ngrok/cloudflared
+# (ver README.md, sección "Conectar el webhook").
+#
+# Uso:
+#   1. cp .env.example .env   (y completa EVOLUTION_API_KEY / POSTGRES_PASSWORD)
+#   2. docker compose up -d
+#   3. Abrir http://localhost:8080/manager para crear la instancia y escanear el QR
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: waaibot
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-evolution_pg_password}
+      POSTGRES_DB: evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - wa-bot-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: wa_bot_redis
+    restart: unless-stopped
+    networks:
+      - wa-bot-net
+
+  evolution-api:
+    # Usamos un tag fijo (no "latest") para evitar breaking changes a mitad
+    # de la prueba, tal como sugiere el enunciado.
+    image: atendai/evolution-api:v2.2.3
+    container_name: wa_bot_evolution
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8080:8080"
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-change-me}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${POSTGRES_PASSWORD:-evolution_pg_password}@postgres:5432/evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/1
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      CACHE_LOCAL_ENABLED: "false"
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - wa-bot-net
+
+networks:
+  wa-bot-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  evolution_instances:
